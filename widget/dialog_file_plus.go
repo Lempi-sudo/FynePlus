@@ -72,6 +72,7 @@ type fileDialog struct {
 type FileDialog struct {
 	callback         interface{}
 	onClosedCallback func(bool)
+	onCancelCallback func()
 	parent           fyne.Window
 	dialog           *fileDialog
 
@@ -185,6 +186,9 @@ func (f *fileDialog) makeUI() fyne.CanvasObject {
 		f.win.Hide()
 		if f.file.onClosedCallback != nil {
 			f.file.onClosedCallback(false)
+		}
+		if f.file.onCancelCallback != nil {
+			f.file.onCancelCallback()
 		}
 		if f.file.callback != nil {
 			if f.file.save {
@@ -718,6 +722,10 @@ func (f *FileDialog) SetOnClosed(closed func()) {
 	}
 }
 
+func (f *FileDialog) SetOnCancel(closed func()) {
+	f.onCancelCallback = closed
+}
+
 // SetFilter sets a filter for limiting files that can be chosen in the file dialog.
 func (f *FileDialog) SetFilter(filter storage.FileFilter) {
 	if f.isDirectory() {
@@ -747,13 +755,9 @@ func (f *FileDialog) SetFileName(fileName string) {
 // when the user cancels or when nothing is selected.
 //
 // The dialog will appear over the window specified when Show() is called.
-func NewFileOpen(callback func(fyne.URIReadCloser, error), parent fyne.Window) *FileDialog {
+func NewFileOpenPlus(callback func(fyne.URIReadCloser, error), parent fyne.Window) *FileDialog {
 	dialog := &FileDialog{callback: callback, parent: parent}
 	return dialog
-}
-
-func NewFileOpenPlus() string {
-	return "NewFileOpenPlus"
 }
 
 // NewFileSave creates a file dialog allowing the user to choose a file to save
@@ -774,7 +778,7 @@ func NewFileSave(callback func(fyne.URIWriteCloser, error), parent fyne.Window) 
 //
 // The dialog will appear over the window specified.
 func ShowFileOpen(callback func(fyne.URIReadCloser, error), parent fyne.Window) {
-	dialog := NewFileOpen(callback, parent)
+	dialog := NewFileOpenPlus(callback, parent)
 	if fileOpenOSOverride(dialog) {
 		return
 	}
