@@ -41,7 +41,7 @@ func (i *fileDialogItem) CreateRenderer() fyne.WidgetRenderer {
 func (i *fileDialogItem) setLocation(l fyne.URI, dir, up bool) {
 	i.dir = dir
 	i.location = l
-	i.name = l.Name()
+	i.name, _ = GetRusNameFolder(l.Name())
 
 	if i.picker.view == gridView {
 		ext := filepath.Ext(i.name[1:])

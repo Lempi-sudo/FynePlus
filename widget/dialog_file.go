@@ -336,9 +336,35 @@ func (f *fileDialog) loadFavorites() {
 			continue
 		}
 		locIcon := favoriteIcons[locName]
-		f.favorites = append(f.favorites,
-			favoriteItem{locName: locName, locIcon: locIcon, loc: loc})
+		if rusLocName, err := GetRusNameFolder(locName); err != nil {
+			f.favorites = append(f.favorites,
+				favoriteItem{locName: locName, locIcon: locIcon, loc: loc})
+		} else {
+			f.favorites = append(f.favorites,
+				favoriteItem{locName: rusLocName, locIcon: locIcon, loc: loc})
+		}
 	}
+}
+
+// Определяем пользовательскую ошибку
+var ErrTranslationNotFound = errors.New("folder's translation hasn't found")
+
+func getRusMapFolders() map[string]string {
+	return map[string]string{
+		"Documents": "Документы",
+		"Downloads": "Загрузки",
+		"Music":     "Музыка",
+		"Pictures":  "Картинки",
+		"Videos":    "Видео",
+	}
+}
+
+func GetRusNameFolder(engNameFolder string) (string, error) {
+	mapping := getRusMapFolders()
+	if val, ok := mapping[engNameFolder]; ok {
+		return val, nil
+	}
+	return engNameFolder, ErrTranslationNotFound
 }
 
 func (f *fileDialog) refreshDir(dir fyne.ListableURI) {
@@ -444,8 +470,16 @@ func (f *fileDialog) setLocation(dir fyne.URI) error {
 		if !isDir {
 			return errors.New("location was not a listable URI")
 		}
+
+		var translatedFolderName string
+		if nameFolderRus, err := GetRusNameFolder(d); err != nil {
+			translatedFolderName = d
+		} else {
+			translatedFolderName = nameFolderRus
+		}
+
 		f.breadcrumb.Add(
-			widget.NewButton(d, func() {
+			widget.NewButton(translatedFolderName, func() {
 				err := f.setLocation(newDir)
 				if err != nil {
 					fyne.LogError("Failed to set directory", err)
