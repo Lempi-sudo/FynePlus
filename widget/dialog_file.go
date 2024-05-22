@@ -18,6 +18,8 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+const language = "RU"
+
 type viewLayout int
 
 const (
@@ -66,6 +68,7 @@ type fileDialog struct {
 	dir        fyne.ListableURI
 	// this will be the initial filename in a FileDialog in save mode
 	initialFileName string
+	localName       Translations
 }
 
 // FileDialog is a dialog containing a file picker for use in opening or saving files.
@@ -105,9 +108,9 @@ func (f *fileDialog) makeUI() fyne.CanvasObject {
 		f.fileName = widget.NewLabel("")
 	}
 
-	label := "Open"
+	label := f.localName.Open
 	if f.file.save {
-		label = "Save"
+		label = f.localName.Save
 	}
 	if f.file.confirmText != "" {
 		label = f.file.confirmText
@@ -178,7 +181,7 @@ func (f *fileDialog) makeUI() fyne.CanvasObject {
 	if f.file.save {
 		f.fileName.SetText(f.initialFileName)
 	}
-	dismissLabel := "Cancel"
+	dismissLabel := f.localName.Cancel
 	if f.file.dismissText != "" {
 		dismissLabel = f.file.dismissText
 	}
@@ -209,7 +212,7 @@ func (f *fileDialog) makeUI() fyne.CanvasObject {
 
 	f.breadcrumb = container.NewHBox()
 	f.breadcrumbScroll = container.NewHScroll(container.NewPadded(f.breadcrumb))
-	title := label + " File"
+	title := label + " " + f.localName.File
 	if f.file.isDirectory() {
 		title = label + " Folder"
 	}
@@ -300,7 +303,7 @@ func (f *fileDialog) makeUI() fyne.CanvasObject {
 }
 
 func (f *fileDialog) optionsMenu(position fyne.Position, buttonSize fyne.Size) {
-	hiddenFiles := widget.NewCheck("Show Hidden Files", func(changed bool) {
+	hiddenFiles := widget.NewCheck(f.localName.ShowHiddenFiles, func(changed bool) {
 		f.showHidden = changed
 		f.refreshDir(f.dir)
 	})
@@ -344,27 +347,6 @@ func (f *fileDialog) loadFavorites() {
 				favoriteItem{locName: rusLocName, locIcon: locIcon, loc: loc})
 		}
 	}
-}
-
-// Определяем пользовательскую ошибку
-var ErrTranslationNotFound = errors.New("folder's translation hasn't found")
-
-func getRusMapFolders() map[string]string {
-	return map[string]string{
-		"Documents": "Документы",
-		"Downloads": "Загрузки",
-		"Music":     "Музыка",
-		"Pictures":  "Картинки",
-		"Videos":    "Видео",
-	}
-}
-
-func GetRusNameFolder(engNameFolder string) (string, error) {
-	mapping := getRusMapFolders()
-	if val, ok := mapping[engNameFolder]; ok {
-		return val, nil
-	}
-	return engNameFolder, ErrTranslationNotFound
 }
 
 func (f *fileDialog) refreshDir(dir fyne.ListableURI) {
@@ -639,6 +621,7 @@ func (f *FileDialog) effectiveStartingDir() fyne.ListableURI {
 
 func showFile(file *FileDialog) *fileDialog {
 	d := &fileDialog{file: file, initialFileName: file.initialFileName}
+	d.localName, _ = LoadNameLocalization(language)
 	ui := d.makeUI()
 	pad := theme.Padding()
 	itemMin := d.newFileItem(storage.NewFileURI("filename.txt"), false, false).MinSize()
