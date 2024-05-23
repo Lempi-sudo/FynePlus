@@ -252,33 +252,7 @@ func (f *fileDialog) makeUI() fyne.CanvasObject {
 		}
 	})
 
-	newFolderButton := widget.NewButtonWithIcon("", theme.FolderNewIcon(), func() {
-		newFolderEntry := widget.NewEntry()
-		dialog.ShowForm("New Folder", "Create Folder", "Cancel", []*widget.FormItem{
-			{
-				Text:   "Name",
-				Widget: newFolderEntry,
-			},
-		}, func(s bool) {
-			if !s || newFolderEntry.Text == "" {
-				return
-			}
-
-			newFolderPath := filepath.Join(f.dir.Path(), newFolderEntry.Text)
-			createFolderErr := os.MkdirAll(newFolderPath, 0750)
-			if createFolderErr != nil {
-				fyne.LogError(
-					fmt.Sprintf("Failed to create folder with path %s", newFolderPath),
-					createFolderErr,
-				)
-				dialog.ShowError(errors.New("folder cannot be created"), f.file.parent)
-			}
-			f.refreshDir(f.dir)
-		}, f.file.parent)
-	})
-
 	optionsbuttons := container.NewHBox(
-		newFolderButton,
 		toggleViewButton,
 		optionsButton,
 	)
